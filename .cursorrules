@@ -1,0 +1,20 @@
+# Regras para geração de mensagens de commit — H2R-knowledge
+
+## Idioma
+- Sempre gere mensagens de commit em português brasileiro
+- Use linguagem clara
+- Siga as convenções de commit em português
+
+## Formato de commits
+- Use o formato: tipo(escopo): descrição breve
+- Tipos comuns: feat, fix, docs, style, refactor, test, chore
+- A descrição deve estar em português e no imperativo
+- Exemplos:
+  - docs(produto): atualiza casos de uso do iron-mkt
+  - docs(brainstorm): adiciona nota sobre integração Evolution
+  - docs(index): registra nova nota no MOC
+
+## Contexto do projeto
+- Repositório de documentação compartilhada da empresa H2R
+- Use termos técnicos apropriados em português
+- Seja específico sobre as mudanças realizadas

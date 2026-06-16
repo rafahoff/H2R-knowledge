@@ -1,0 +1,18 @@
+---
+description: Convenções do repositório H2R-knowledge para o agente (idioma, escopo, commits).
+alwaysApply: true
+---
+
+# H2R — base de conhecimento (agente)
+
+- **Idioma**: respostas e **mensagens de commit** em **português do Brasil** (claro e direto). Não usar inglês na descrição do commit salvo termos técnicos consagrados.
+- **Escopo**: este repo é **documentação de produto e empresa** (`docs/produto/`, `docs/brainstorm/`, `docs/mock/`, `docs/howto/`). Planos de execução e how-tos de implementação ficam nos repos de código (`iron-mkt/docs/`, etc.).
+- **Ponto de entrada**: `docs/index.md` (MOC). Não varrer `docs/` recursivamente — seguir links `[[...]]` relevantes.
+- **Workspace**: usar `H2R.code-workspace` na pasta pai `C:\Github\H2R\` para ver conhecimento + código no mesmo chat.
+- **Vault Obsidian**: pasta pai `C:\Github\H2R\` (não abrir só este repo isolado).
+- **Produtos**: cada produto em `docs/produto/<nome>/` (ex.: `iron-mkt/`). Não misturar com outros ecossistemas externos.
+- **Mensagens de commit (qualidade mínima)**:
+  - **Idioma e formato**: `tipo(escopo): descrição breve` — descrição em **português do Brasil**, **imperativo** (ex.: `docs(produto): atualiza casos de uso`). Tipos: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`. Detalhes em `.cursorrules`.
+  - Antes de sugerir/criar commit, checar **obrigatoriamente**: `git status --short`, `git diff --cached --name-status`, `git diff --name-status` e `git diff --cached`.
+  - Se `git diff --cached` estiver vazio, **não** propor mensagem final; orientar `git add` e reavaliar.
+  - A mensagem deve refletir o **conjunto real de alterações** (não só um arquivo visível).
