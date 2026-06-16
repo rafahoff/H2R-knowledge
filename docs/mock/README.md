@@ -6,7 +6,7 @@ Documentação de **dados e ambientes de homologação** por produto. O código 
 
 | Produto | Dados mock no código | Notas |
 |---------|----------------------|-------|
-| Iron MKT | `iron-mkt/src/data/mock/` | Contatos, listas, campanhas, logs, integrações, agentes IA |
+| Iron MKT | `iron-mkt/src/data/mock/` | Contatos, listas, campanhas, logs, integrações |
 
 ## Regras
 

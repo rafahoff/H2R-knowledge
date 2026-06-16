@@ -24,8 +24,7 @@ Iron MKT é uma plataforma **SaaS única** (multi-tenant na mesma instância) pa
 - **Lista de disparo** — conjunto nomeado de contatos (`contactIds`).
 - **Campanha** — nome, listas alvo, template de mensagem, status (`rascunho`, `agendada`, `enviando`, `concluida`), métricas (`enviadas`, `entregues`, `respostas`, `total`).
 - **Log** — evento por contato/campanha (`enviado`, `entregue`, `resposta`, `falha`) com timestamp.
-- **Integração** — `chatwoot` ou `evolution`; URL base, API key, status (`conectado`, `desconectado`, `erro`).
-- **Agente de IA** — nome, modelo, prompt, flag `ativo` (configuração futura de respostas automatizadas).
+- **Integração** — `chatwoot` ou `evolution`; URL base, API key, status (`conectado`, `desconectado`, `erro`). Colaboração com agentes de IA é feita no **Chatwoot**, não no Iron MKT (ver ADR-0005 em `iron-mkt/docs/adr/`).
 
 ---
 

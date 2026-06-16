@@ -33,5 +33,4 @@ Detalhes e fluxos em [[CASOS_DE_USO]] (`docs/produto/iron-mkt/CASOS_DE_USO.MD`).
 | **Lista de disparo** | Agrupamento nomeado de contatos para campanhas. |
 | **Campanha** | Disparo em massa com template de mensagem, listas alvo e métricas de envio. |
 | **Log** | Registro de evento por contato/campanha (`enviado`, `entregue`, `resposta`, `falha`). |
-| **Integração** | Conexão configurada com `chatwoot` ou `evolution` (URL, API key, status). |
-| **Agente de IA** | Configuração de modelo e prompt para respostas automatizadas (fase futura). |
+| **Integração** | Conexão configurada com `chatwoot` ou `evolution` (URL, API key, status). IA no atendimento via Chatwoot. |
