@@ -10,7 +10,7 @@ Mapa central do **conhecimento compartilhado** H2R. Agentes: ler este arquivo pr
 
 | Produto | Casos de uso | Repo de código |
 |---------|--------------|----------------|
-| **Iron MKT** | [[CASOS_DE_USO]] | [[iron-mkt/docs/index|Iron MKT — índice local]] |
+| **Iron MKT** | [[CASOS_DE_USO]] *(actualizado 2026-06-23: API, auth JWT, sync Chatwoot)* | [[iron-mkt/docs/index|Iron MKT — índice local]] |
 
 **Identidade visual:** [[identidade/README]] (`docs/produto/identidade/`)
 
