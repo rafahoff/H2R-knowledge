@@ -61,7 +61,7 @@ Deploy self-hosted (VPS + Docker Compose). Ver ADR-0001 em `iron-mkt/docs/adr/`.
 
 - **Organização** — tenant (estabelecimento); operador pode pertencer a várias e trocar contexto activo no JWT (`organizationId`).
 - **Utilizador** — e-mail + senha; registo bootstrap cria utilizador e primeira organização.
-- **Contato** — espelho local do Chatwoot: nome, telefone, e-mail, tags, status (`ativo`, `inativo`, `bloqueado`); **somente leitura** na UI; API pública sem `POST`/`PATCH`/`DELETE` (escrita só via sync interno).
+- **Contato** — espelho local do Chatwoot: `chatwootContactId` (chave de ligação), nome, telefone normalizado, e-mail, tags, status (`ativo`, `inativo`, `bloqueado`); **somente leitura** na UI; API pública sem `POST`/`PATCH`/`DELETE` (escrita só via sync interno).
 - **Lista de disparo** — conjunto nomeado de contatos (`contactIds` do espelho local).
 - **Campanha** — nome, listas alvo, integração Evolution, template de mensagem, status (`rascunho`, `agendada`, `enviando`, `concluida`), métricas (`enviadas`, `entregues`, `respostas`, `total`).
 - **Log** — evento por contato/campanha (`enviado`, `entregue`, `resposta`, `falha`) com timestamp; persistido pelo worker no disparo.
@@ -137,7 +137,7 @@ Selector de organização no header; ao trocar org, stores recarregam dados da o
 
 1. **Manual:** operador em `/contacts` clica «Sincronizar com Chatwoot» → `POST /contatos/sincronizar`.
 2. **Automático:** worker executa job `chatwoot-contact-sync` (cron configurável, default cada 30 min).
-3. Sistema pagina contactos Chatwoot e faz upsert idempotente por `(organizationId, telefone)`.
+3. Sistema pagina contactos Chatwoot e faz upsert idempotente por `(organizationId, chatwootContactId)`; `telefone` é normalizado (DDI 55, nono dígito) antes de gravar.
 4. UI mostra estado via `GET /contatos/sync-estado` (`nunca` | `em_progresso` | `ok` | `erro`).
 
 **Pós-condição:** Espelho local actualizado; UI **não** permite criar, editar ou importar CSV de contatos.
