@@ -2,7 +2,7 @@
 
 > **Produto:** Iron MKT · **Repo:** `iron-mkt` · **Glossário:** [[CONTEXT]]  
 > **Leitura obrigatória** antes de alterar código no repositório `iron-mkt`.  
-> **Actualizado:** 2026-06-23 — plataforma integrada (web ↔ API ↔ worker), auth JWT multi-org, sync Chatwoot, disparo via fila.
+> **Actualizado:** 2026-06-26 — nomenclatura técnica EN **concluída** (API, web, worker, testes); narrativa de negócio em pt-BR.
 
 Iron MKT é uma plataforma **SaaS única** (multi-tenant na mesma instância) para **disparo de campanhas por WhatsApp**, com integração **EvolutionAPI** (envio) e **Chatwoot** (contatos e atendimento). O operador configura integrações, monta listas a partir do espelho de contatos, dispara campanhas e acompanha métricas e logs — **sem editar contatos manualmente** no Iron MKT.
 
@@ -63,8 +63,8 @@ Deploy self-hosted (VPS + Docker Compose). Ver ADR-0001 em `iron-mkt/docs/adr/`.
 - **Utilizador** — e-mail + senha; registo bootstrap cria utilizador e primeira organização.
 - **Contato** — espelho local do Chatwoot: `chatwootContactId` (chave de ligação), nome, telefone normalizado, e-mail, tags, status (`ativo`, `inativo`, `bloqueado`); **somente leitura** na UI; API pública sem `POST`/`PATCH`/`DELETE` (escrita só via sync interno).
 - **Lista de disparo** — conjunto nomeado de contatos (`contactIds` do espelho local).
-- **Campanha** — nome, listas alvo, integração Evolution, template de mensagem, status (`rascunho`, `agendada`, `enviando`, `concluida`), métricas (`enviadas`, `entregues`, `respostas`, `total`).
-- **Log** — evento por contato/campanha (`enviado`, `entregue`, `resposta`, `falha`) com timestamp; persistido pelo worker no disparo.
+- **Campanha** — nome, listas alvo, `preferredIntegrationId` (integração Evolution preferida), `integrationId` (último disparo), template, status (**rascunho** (`draft`), **agendada** (`scheduled`), **aguardando fila** (`queue_waiting`), **enviando** (`sending`), **concluída** (`completed`), **erro** (`error`)), `scheduledAt` opcional, métricas.
+- **Log** — evento por contato/campanha (`enviado`, `entregue`, `resposta`, `falha`) com timestamp e snapshot `integrationName`; persistido pelo worker no disparo.
 - **Integração** — `chatwoot` ou `evolution`; URL base, API key (cifrada na BD), status (`conectado`, `desconectado`, `erro`). Várias integrações do mesmo provider por org; campanha referencia qual Evolution usar.
 
 ---
@@ -73,9 +73,9 @@ Deploy self-hosted (VPS + Docker Compose). Ver ADR-0001 em `iron-mkt/docs/adr/`.
 
 | Rota | Função |
 |------|--------|
-| `/login`, `/registro` | Autenticação e bootstrap (utilizador + org) |
+| `/login`, `/register` | Autenticação e bootstrap (utilizador + org) |
 | `/dashboard` | Resumo: campanhas, listas, integrações, contatos da org activa |
-| `/organizacoes` | Listar, criar e activar organizações |
+| `/organizations` | Listar, criar e activar organizações |
 | `/integrations` | CRUD integrações Chatwoot/Evolution |
 | `/contacts` | Listagem leitura + «Sincronizar com Chatwoot» + estado do sync |
 | `/lists` | CRUD listas; associar/remover membros (`contactIds`) |
@@ -83,6 +83,31 @@ Deploy self-hosted (VPS + Docker Compose). Ver ADR-0001 em `iron-mkt/docs/adr/`.
 | `/logs` | Consulta logs com filtro por evento e campanha |
 
 Selector de organização no header; ao trocar org, stores recarregam dados da org activa.
+
+## Contrato API (inglês)
+
+Rotas e JSON da API em inglês (ADR-0007 concluído). UI mantém copy em português; valores técnicos exemplificados:
+
+| Recurso | Rota base |
+|---------|-----------|
+| Auth | `/api/v1/auth/register`, `login`, `me`, `switch-organization` |
+| Organizações | `/api/v1/organizations` |
+| Contatos | `/api/v1/contacts`, `.../sync`, `.../sync-status` |
+| Listas | `/api/v1/contact-lists` |
+| Campanhas | `/api/v1/campaigns`, `.../dispatch`, `.../dispatch-preview` |
+| Integrações | `/api/v1/integrations`, `.../test-connection` |
+
+Exemplo de payload:
+
+```json
+{
+  "status": "draft",
+  "integrationStatus": "connected",
+  "contactStatus": "active"
+}
+```
+
+Equivalências de status: ver `iron-mkt/CONTEXT.md` (negócio pt-BR ↔ valor API).
 
 ---
 
@@ -93,7 +118,7 @@ Selector de organização no header; ao trocar org, stores recarregam dados da o
 **Actor:** Operador  
 **Pré-condição:** Instância Iron MKT disponível.
 
-1. Operador acede `/registro`, informa nome, e-mail, senha (≥8), nome da org (slug opcional).
+1. Operador acede `/register`, informa nome, e-mail, senha (≥8), nome da org (slug opcional).
 2. Sistema cria utilizador + organização e devolve JWT.
 3. Alternativa: `/login` com e-mail e senha → JWT em `localStorage`.
 4. Rotas `(app)/*` exigem token; sem token → redirect `/login`.
@@ -107,8 +132,8 @@ Selector de organização no header; ao trocar org, stores recarregam dados da o
 **Actor:** Operador autenticado.
 
 1. Operador lista organizações via `GET /auth/me`.
-2. Operador cria nova org em `/organizacoes` (`POST /organizacoes`).
-3. Operador troca contexto no header (`POST /auth/trocar-organizacao`).
+2. Operador cria nova org em `/organizations` (`POST /organizations`).
+3. Operador troca contexto no header (`POST /auth/switch-organization`).
 4. UI recarrega integrações, contatos, listas, campanhas e logs da org activa.
 
 **Notas:** `PATCH`/`DELETE` de organização não são requisito do MVP; listagem cobre o DoD actual.
@@ -123,7 +148,7 @@ Selector de organização no header; ao trocar org, stores recarregam dados da o
 2. Cria integração **Chatwoot** (URL + token) — obrigatória para sync de contatos.
 3. Cria integração **Evolution** (URL + API key) — obrigatória para disparo.
 4. API key mascarada na listagem; envio de nova key só ao editar.
-5. Status `erro` bloqueia novos disparos nessa integração até correcção.
+5. Status **erro** (`error`) bloqueia novos disparos nessa integração até correcção.
 
 **Notas:** «Testar conexão» na UI pode ser simulado até integração real com health-check das APIs externas.
 
@@ -133,12 +158,12 @@ Selector de organização no header; ao trocar org, stores recarregam dados da o
 
 **Actor:** Operador ou Sistema (cron).
 
-**Pré-condição:** Integração Chatwoot configurada (`conectado` ou `erro` recuperável).
+**Pré-condição:** Integração Chatwoot configurada (**conectado** (`connected`) ou **erro** (`error`) recuperável).
 
-1. **Manual:** operador em `/contacts` clica «Sincronizar com Chatwoot» → `POST /contatos/sincronizar`.
+1. **Manual:** operador em `/contacts` clica «Sincronizar com Chatwoot» → `POST /contacts/sync`.
 2. **Automático:** worker executa job `chatwoot-contact-sync` (cron configurável, default cada 30 min).
-3. Sistema pagina contactos Chatwoot e faz upsert idempotente por `(organizationId, chatwootContactId)`; `telefone` é normalizado (DDI 55, nono dígito) antes de gravar.
-4. UI mostra estado via `GET /contatos/sync-estado` (`nunca` | `em_progresso` | `ok` | `erro`).
+3. Sistema pagina contactos Chatwoot e faz upsert idempotente por `(organizationId, chatwootContactId)`; telefone normalizado antes de gravar.
+4. UI mostra estado via `GET /contacts/sync-status` (`never` | `in_progress` | `ok` | `error`).
 
 **Pós-condição:** Espelho local actualizado; UI **não** permite criar, editar ou importar CSV de contatos.
 
@@ -161,16 +186,34 @@ Selector de organização no header; ao trocar org, stores recarregam dados da o
 
 **Actor:** Operador autenticado.
 
-**Pré-condição:** Integração Evolution válida; listas com contactos; template preenchido.
+**Pré-condição:** Pelo menos uma integração Evolution com `instanceName`; listas com contactos; template ou anexo.
 
-1. Operador cria campanha em `rascunho` em `/campaigns`: nome, listas, integração Evolution, template.
-2. Operador clica **Disparar** → `POST /campanhas/:id/disparar` enfileira job BullMQ.
-3. Worker processa fila `campaign-dispatch` (hoje **stub** Evolution; envio real em backlog).
-4. UI faz polling (~3s) enquanto `status === "enviando"`; barra de progresso com métricas.
-5. Worker regista logs (`enviado` / `falha`) por contacto.
-6. Campanha passa a `concluida` quando processamento termina.
+1. Operador cria campanha em `/campaigns` (wizard): **Básico** → **Mensagem** → **Audiência** → **Integração** (`preferredIntegrationId`). Com uma única integração pronta, o passo Integração é omitido e preenchido automaticamente.
+2. Operador pode definir `scheduledAt` e status **agendada** (`scheduled`) para disparo automático.
+3. Disparo manual: **Disparar** → `POST /campaigns/:id/dispatch` com `integrationId` (pré-selecção: último disparo ou preferida).
+4. Disparo automático: worker `CampaignScheduleScheduler` (cron `CAMPAIGN_SCHEDULE_CRON`, padrão cada minuto) processa campanhas `scheduled` com `scheduledAt <= now`.
+5. Worker enfileira fila `campaign-dispatch`; UI faz polling (~3s) enquanto `status === "sending"`.
+6. Worker regista logs (`sent` / `failure`) com `integrationId` e `integrationName`.
+7. Campanha passa a `completed` quando processamento termina; integração ocupada → `queue_waiting` (ADR-0006).
 
-**Pós-condição:** Métricas actualizadas; logs visíveis em `/logs` e dashboard.
+**Pós-condição:** Métricas actualizadas; logs com coluna integração em `/logs` e dashboard.
+
+---
+
+### UC-08 — Disparo agendado automático
+
+**Actor:** Sistema (scheduler worker).
+
+**Pré-condição:** Campanha com `status === scheduled`, `scheduledAt` preenchido e `preferredIntegrationId` válido.
+
+1. A cada tick (`CAMPAIGN_SCHEDULE_CRON`), worker lista campanhas elegíveis (`scheduledAt <= now`).
+2. Claim transacional (`UPDATE … WHERE status = scheduled`) evita duplo disparo.
+3. Valida `preferredIntegrationId` (Evolution, `instanceName`, não `error`).
+4. Reutiliza lógica de `dispatch` — enfileira `campaign-dispatch` ou `queue_waiting`.
+5. Falha dura (integração inválida): `status = error`, `dispatchError` preenchido; **sem** retry automático.
+6. Worker parado: campanhas atrasadas disparam no próximo tick após recuperação.
+
+**Pós-condição:** `integrationId` actualizado; logs com integração usada.
 
 ---
 
@@ -178,7 +221,7 @@ Selector de organização no header; ao trocar org, stores recarregam dados da o
 
 **Actor:** Operador autenticado.
 
-1. Operador acede `/logs` — lista eventos da org com filtro por `evento` e `campanhaId`.
+1. Operador acede `/logs` — lista eventos da org com filtro por `event` e `campaignId`.
 2. Dashboard e `/campaigns` mostram métricas agregadas da campanha.
 3. Dados isolados por `organizationId`; acesso cross-tenant retorna 403/404.
 
@@ -208,7 +251,7 @@ Documentado em `iron-mkt/TODO.MD` e planos em `iron-mkt/docs/plans/`.
 | Baixa | Health-check real em «Testar conexão» | Validar credenciais Evolution/Chatwoot |
 | Futuro | Quotas / limites por tenant | Bloquear disparo acima do plano |
 
-Planos concluídos (arquivo): [[PLANO_UI_API_INTEGRACAO]], [[PLANO_SYNC_CHATWOOT]], [[PLANO_MONOREPO_DEPLOY]].
+Planos concluídos (arquivo): [[PLANO_UI_API_INTEGRACAO]], [[PLANO_SYNC_CHATWOOT]], [[PLANO_MONOREPO_DEPLOY]], [[PLANO_NOMENCLATURA_INGLES]], [[PLANO_DISPARO_AGENDADO]].
 
 ---
 
@@ -221,14 +264,14 @@ Planos concluídos (arquivo): [[PLANO_UI_API_INTEGRACAO]], [[PLANO_SYNC_CHATWOOT
 | EvolutionAPI offline ou timeout | Campanha em `enviando` **pausa**; alerta ao operador; retentativas com backoff *(a definir)* | Cancelar vs retomar manualmente — pendente |
 | API key Evolution inválida | Integração `erro`; **bloqueia novos disparos** | — |
 | Chatwoot sync falha | Disparo **pode continuar** se Evolution OK; retry em background | ADR-0002 |
-| Chatwoot offline prolongado | Fila de sync; UI estado degradado em `/contacts` | `GET /contatos/sync-estado` |
-| Sync sem integração Chatwoot | `POST /contatos/sincronizar` retorna **400** | Configurar Chatwoot primeiro |
+| Chatwoot offline prolongado | Fila de sync; UI estado degradado em `/contacts` | `GET /contacts/sync-status` |
+| Sync sem integração Chatwoot | `POST /contacts/sync` retorna **400** | Configurar Chatwoot primeiro |
 
 ### Campanha e contatos
 
 | Situação | Comportamento esperado | Notas |
 |----------|------------------------|-------|
-| Telefone inválido ou contato `bloqueado` | **Pula** contacto; log `falha` com motivo | Não conta em `enviadas` |
+| Telefone inválido ou contato **bloqueado** (`blocked`) | **Pula** contacto; log **falha** (`failure`) com motivo | Não conta em métricas `sent` |
 | Rate limit WhatsApp | Fila **desacelera**; UI informa atraso | BullMQ |
 | Campanha interrompida a meio | `enviando` ou `pausada` *(a definir)* | Retomar vs cancelar — pendente |
 | Lista vazia / sem activos | Validação impede disparo | — |
@@ -253,6 +296,8 @@ Planos concluídos (arquivo): [[PLANO_UI_API_INTEGRACAO]], [[PLANO_SYNC_CHATWOOT
 - [[PLANO_SYNC_CHATWOOT]] — espelho de contatos S1–S4 *(concluído)*
 - [[PLANO_TESTES_API_E2E]] — testes API e E2E *(activo: T0–T1 feitos)*
 - [[PLANO_MONOREPO_DEPLOY]] — monorepo e deploy *(concluído)*
+- [[PLANO_NOMENCLATURA_INGLES]] — nomenclatura técnica EN *(concluído)*
+- [[PLANO_DISPARO_AGENDADO]] — disparo agendado e scheduler *(concluído)*
 - `iron-mkt/TODO.MD` — backlog técnico
 - `iron-mkt/CONTEXT.md` — glossário local
 - `iron-mkt/docs/adr/0002-multi-tenant-organizacao.md` — isolamento e integrações
