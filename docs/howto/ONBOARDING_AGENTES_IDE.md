@@ -56,6 +56,16 @@ git clone <url-iron-mkt> iron-mkt
 | **Skills globais** | `~/.cursor/skills/` | Partilhadas — ex.: `obsidian`, `bootstrap-template-projeto` |
 | **Napkin** | `.cursor/napkin.md` | Runbook curado (comandos que funcionam) |
 | **Commits** | `.cursorrules` | Mensagens em português (`feat(escopo): …`) |
+| **Workspace** | `.cursor/rules/h2r-workspace.mdc` (em cada repo) | Comunicação pt-BR vs código em inglês |
+
+### Idioma: comunicação vs código
+
+| Onde | Português BR | Inglês |
+|------|--------------|--------|
+| Ficheiros de código | **Somente comentários** | Identificadores, rotas, SQL, JSON, ficheiros |
+| Fora do código | Respostas, commits, docs de produto | — |
+
+Regra: `.cursor/rules/h2r-workspace.mdc` (em cada repo). Legado PT no `iron-mkt`: `TODO.MD`.
 
 ---
 

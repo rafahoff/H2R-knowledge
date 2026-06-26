@@ -14,6 +14,11 @@
   - docs(brainstorm): adiciona nota sobre integração Evolution
   - docs(index): registra nova nota no MOC
 
+## Nomenclatura de código (exemplos em docs e planos)
+- **No código:** português somente em comentários; identificadores em **inglês**
+- Texto explicativo e commits: português brasileiro
+- Detalhes: `.cursor/rules/h2r-workspace.mdc`
+
 ## Contexto do projeto
 - Repositório de documentação compartilhada da empresa H2R
 - Use termos técnicos apropriados em português

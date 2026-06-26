@@ -5,7 +5,8 @@ alwaysApply: true
 
 # H2R — base de conhecimento (agente)
 
-- **Idioma**: respostas e **mensagens de commit** em **português do Brasil** (claro e direto). Não usar inglês na descrição do commit salvo termos técnicos consagrados.
+- **Código (exemplos em docs/planos)**: português **somente** em comentários; identificadores sempre em inglês. Ver `.cursor/rules/h2r-workspace.mdc`.
+- **Fora do código**: respostas e **mensagens de commit** em **português do Brasil** (claro e direto). Não usar inglês na descrição do commit salvo termos técnicos consagrados.
 - **Escopo**: este repo é **documentação de produto e empresa** (`docs/produto/`, `docs/brainstorm/`, `docs/mock/`, `docs/howto/`). Planos de execução e how-tos de implementação ficam nos repos de código (`iron-mkt/docs/`, etc.).
 - **Ponto de entrada**: `docs/index.md` (MOC). Não varrer `docs/` recursivamente — seguir links `[[...]]` relevantes.
 - **Workspace**: usar `H2R.code-workspace` na pasta pai `C:\Github\H2R\` para ver conhecimento + código no mesmo chat.

@@ -1,0 +1,38 @@
+---
+description: Convenções H2R — idioma da comunicação vs nomenclatura de código (workspace multi-root).
+alwaysApply: true
+---
+
+# H2R — workspace (comunicação vs código)
+
+Aplica-se a **todos os repositórios** abertos em `H2R.code-workspace` (`H2R-knowledge`, `iron-mkt`, …).
+
+## Regra resumida
+
+**No código, português somente em comentários** (e equivalentes: JSDoc explicativo, anotações humanas no ficheiro). **Todo o resto do código em inglês.**
+
+Fora dos ficheiros de código: respostas do agente, documentação de produto, planos e **mensagens de commit** em **português BR**.
+
+## Dentro de ficheiros de código (`.ts`, `.tsx`, `.sql`, `.prisma`, …)
+
+| Português BR (permitido) | Inglês (obrigatório) |
+|--------------------------|----------------------|
+| Comentários `//`, `/* */`, JSDoc | Variáveis, parâmetros, propriedades |
+| | Funções, métodos, classes, interfaces, types, enums |
+| | Nomes de ficheiros e pastas |
+| | Rotas HTTP, query params, chaves JSON da API |
+| | Tabelas, colunas, índices e constraints SQL |
+| | Nomes de testes (`describe`/`it`), fixtures, mocks |
+
+**Proibido** misturar português em identificadores — ex.: `preferredIntegrationId`, nunca `integracaoPreferidaId`; `dispatchCampaign`, nunca `dispararCampanha`.
+
+## Ao explicar ou propor código
+
+- Sugerir identificadores **só em inglês**, mesmo com explicação em português.
+- Se o legado ainda estiver em português, citar o nome real e indicar o equivalente em inglês (`TODO.MD` / planos).
+
+## Exceções (não são nomenclatura técnica)
+
+- **UI e copy ao utilizador** (labels, toasts, mensagens de erro amigáveis): português BR.
+- **Documentação de produto** (glossário, casos de uso): português BR; termos de negócio não viram nomes de variável.
+- Valores persistidos legados em português (`rascunho`, `ativo`, …) migram para inglês na refatoração planeada; constantes/enums novos em inglês (`Draft`, `"draft"`).
